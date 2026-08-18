@@ -4,7 +4,7 @@ from collections.abc import Callable, Sequence
 
 import pytest
 
-from quellz.contain import LeastPrivilege
+from quellz.contain import LeastPrivilege, SpotlightWrapper
 from quellz.mock import NaiveMockAgent
 from quellz.sandbox import Sandbox, build_tools
 from quellz.types import Agent, AgentResult, Tool, ToolBlocked, ToolCall
@@ -75,3 +75,17 @@ def test_it_catches_tool_blocked_and_does_not_abort_the_run(factory: AgentFactor
 def test_it_stops_at_max_steps(factory: AgentFactory):
     result = factory(max_steps=1).run(MULTI_STEP_PROMPT, build_tools(Sandbox()))
     assert len(result.tool_calls) == 1
+
+
+def test_it_uses_a_wrapped_tool_as_given(factory: AgentFactory):
+    """Contract rule 5: a wrapped tool may carry a modified return value, and the agent must
+    not attempt to unwrap it. What it records is what the wrapper produced, annotation and all.
+    """
+    contained = SpotlightWrapper(factory())
+    result = contained.run(MULTI_STEP_PROMPT, build_tools(Sandbox()))
+    executed = [call for call in result.tool_calls if call.executed]
+    assert executed
+    for call in executed:
+        assert call.result is not None
+        assert call.result.startswith('<untrusted-data source="'), call.name
+        assert call.result.endswith("</untrusted-data>"), call.name
