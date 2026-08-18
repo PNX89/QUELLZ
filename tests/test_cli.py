@@ -74,6 +74,26 @@ def test_verify_log_passes_on_a_good_chain_and_fails_on_a_tampered_one(tmp_path,
     assert "FAILED" in capsys.readouterr().err
 
 
+def test_verify_log_reports_an_undecodable_file_without_a_traceback(tmp_path, capsys):
+    """A byte that will not decode raises UnicodeDecodeError, which is a ValueError.
+
+    Uncaught it escapes main() entirely: the caller gets a traceback and an exit code nobody
+    chose. Exit 1 is deliberate here. The file did not verify, and answering a byte the tool
+    could not read with the usage code would let a corrupted log read as a configuration
+    problem to a gate that only checks for zero.
+    """
+    path = tmp_path / "run.jsonl"
+    run = ["run", "--demo", "--mode", "contained", *PERMISSIVE, "--log", str(path)]
+    assert main(run) == EXIT_OK
+    capsys.readouterr()
+    path.write_bytes(path.read_bytes().replace(b"read_document", b"read_\xffdocument", 1))
+
+    assert main(["verify-log", str(path)]) == EXIT_GATE
+    printed = capsys.readouterr().err
+    assert "not valid UTF-8" in printed
+    assert "Traceback" not in printed
+
+
 def test_version_prints_the_package_version(capsys):
     with pytest.raises(SystemExit) as raised:
         main(["--version"])

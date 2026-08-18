@@ -176,6 +176,25 @@ def test_it_refuses_a_missing_log_and_refuses_to_extend_a_broken_chain(tmp_path)
         HashChainLog(path, clock=lambda: FIXED_CLOCK)
 
 
+def test_a_log_that_does_not_decode_fails_verification_rather_than_raising(tmp_path):
+    """UnicodeDecodeError is a ValueError, so it slips past an OSError handler.
+
+    Unhandled, verify-log answers a byte it could not read with a traceback, and the exit code
+    that escapes says "broken chain" for a reason that was never established. Every line this
+    class writes is ASCII JSON, so a byte that will not decode is itself evidence, and the
+    verdict says which evidence it is.
+    """
+    path = tmp_path / "chain.jsonl"
+    log = HashChainLog(path, clock=lambda: FIXED_CLOCK)
+    log.append("tool_call", {"tool": "read_document"})
+    path.write_bytes(path.read_bytes().replace(b"read_document", b"read_\xffdocument"))
+
+    with pytest.raises(LogVerificationError, match="not valid UTF-8"):
+        verify_file(path)
+    with pytest.raises(LogVerificationError, match="not valid UTF-8"):
+        HashChainLog(path, clock=lambda: FIXED_CLOCK)
+
+
 def test_the_injectable_clock_makes_entries_reproducible(tmp_path):
     heads = []
     for name in ("a.jsonl", "b.jsonl"):

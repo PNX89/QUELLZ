@@ -243,8 +243,20 @@ def _digest(entry: Mapping[str, Any]) -> str:
 def _read_entries(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         return []
+    try:
+        text = path.read_text(encoding="utf-8")
+    except UnicodeDecodeError as exc:
+        # UnicodeDecodeError is a ValueError, so an OSError handler upstream does not catch it
+        # and the caller gets a traceback instead of a verdict. This is a verification failure
+        # rather than a usage error on purpose: every line this class writes is ASCII JSON, so
+        # a byte that will not decode is positive evidence that something else wrote it, and a
+        # tamper-evidence tool that answered "not my file, never mind" would fail open.
+        raise LogVerificationError(
+            f"{path} is not valid UTF-8 at byte {exc.start}: it was not written by "
+            "HashChainLog, or it was altered after it was"
+        ) from exc
     entries: list[dict[str, Any]] = []
-    for index, line in enumerate(path.read_text(encoding="utf-8").splitlines()):
+    for index, line in enumerate(text.splitlines()):
         if not line.strip():
             continue
         try:
