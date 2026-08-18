@@ -1,0 +1,57 @@
+[project]
+name = "quellz"
+version = "0.1.0"
+description = "Prompt-injection red-team and containment harness for tool-using LLM agents."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Quelin Zammit" }]
+keywords = ["prompt-injection", "llm-security", "agent-security", "red-team", "owasp"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Security",
+    "Typing :: Typed",
+]
+# Zero runtime dependencies is a design constraint, not an accident: a tool that argues for
+# supply-chain restraint should not pull a compiled extension into its default install path.
+# tests/test_packaging.py asserts this list stays empty.
+dependencies = []
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.116"]
+
+[project.scripts]
+quellz = "quellz.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/PNX89/QUELLZ"
+Source = "https://github.com/PNX89/QUELLZ"
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = ["pytest>=8.0", "ruff>=0.6"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/quellz"]
+
+[tool.ruff]
+line-length = 100
+# ruff defaults to py310; the package uses 3.11 syntax and StrEnum, so pin it explicitly.
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
