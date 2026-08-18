@@ -1,0 +1,44 @@
+name: CI
+
+# No job in this workflow requires ANTHROPIC_API_KEY, and no test touches the network:
+# tests/conftest.py monkeypatches socket.socket to raise for the whole session, and the
+# adapter test drives a stub client.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # 3.11 to 3.13 install the optional extra so the adapter test executes.
+          - python-version: "3.11"
+            sync: "--all-extras --dev"
+          - python-version: "3.12"
+            sync: "--all-extras --dev"
+          - python-version: "3.13"
+            sync: "--all-extras --dev"
+          # 3.14 installs the zero dependency core only. That proves the core needs no wheels
+          # on the newest interpreter, and the adapter test skips through pytest.importorskip.
+          - python-version: "3.14"
+            sync: "--dev"
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+      - run: uv python install ${{ matrix.python-version }}
+      - run: uv sync ${{ matrix.sync }}
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run pytest -q
