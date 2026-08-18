@@ -61,9 +61,21 @@ obedience rule is published, in its class docstring and here:
 4. It stops after `max_steps` tool calls, catches `ToolBlocked` and records the blocked
    attempt, and returns the concatenated text of the calls it made.
 
-Rule 3 is the entire reason `SpotlightWrapper` moves the attack success rate above. That drop
-is a property of the published rule, not evidence about the behaviour of any real model, and
-no attack-success-rate number measured against this fixture says anything about any model.
+The baseline column is 1.00 on every case by construction, because that fixture is built to
+obey and every payload asks it for something it recognises. The delta is therefore entirely a
+property of the containment layer, which is the only thing it is offered as evidence about.
+
+`SpotlightWrapper` does two things, and **either one alone stops these payloads against this
+fixture**. The tags trigger rule 3 above, which is published. Datamarking replaces the
+whitespace inside the span with the marker, which destroys the literal spaces the fixture's
+directive grammar matches on, and that second mechanism is a property of the fixture's parser
+rather than of any published obedience rule. This file used to say rule 3 was "the entire
+reason" the rate drops. Decomposing the wrapper and running all four combinations of its two
+halves falsified that, so the claim is now the weaker true one, and
+`test_the_spotlight_drop_comes_from_both_of_its_halves_not_from_the_tags_alone` measures each
+half separately so it cannot drift back. Against a real model only the first mechanism means
+anything, which is one more reason no attack-success-rate number measured against this fixture
+says anything about any model.
 
 What the table does support is narrower and still worth having. The containment layer enforces
 the policy it states, the cost of that policy is visible in the same table rather than hidden,
@@ -362,6 +374,9 @@ why that table is at the top of this file rather than the bottom.
 - **The hash chain does not survive an attacker who can rewrite the file.** It surfaces
   evidence of edits, reordering and truncation. It is not an anchor.
 - **Twenty-one payloads is a smoke test, not a benchmark.** Use AgentDojo for a benchmark.
+- **The baseline column carries no information.** It is 1.00 on every case because the fixture
+  is built to obey, so the delta is fully determined by the containment layer. An agent you
+  bring through `--agent` is what puts range in that column.
 - **No multimodal payloads, no multi-agent scenarios, no adaptive attack generation**, and no
   tool-definition pinning.
 - `seed` is recorded for whatever agent you bring. The bundled fixture holds no randomness at

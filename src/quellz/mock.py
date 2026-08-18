@@ -58,10 +58,14 @@ class NaiveMockAgent:
     every parameter of the tool it calls, it fills the rest from the text it has seen, which
     is how context reaches an exfiltration sink.
 
-    Rule 3 is the whole reason SpotlightWrapper reduces attack success rate in the demo.
-    That drop is a property of this published rule. It is NOT evidence about the behaviour
-    of any real model, and no attack success rate measured against this fixture says
-    anything about any model.
+    Rule 3 is one of two reasons SpotlightWrapper reduces attack success rate in the demo,
+    and the other one is not a published obedience rule at all. That wrapper also replaces
+    every whitespace run inside the span with a marker character, which destroys the literal
+    spaces the directive patterns below match on, and either half stops these payloads on
+    its own. The drop is therefore a property of this fixture, partly of a rule it publishes
+    and partly of how its parser happens to work. It is NOT evidence about the behaviour of
+    any real model, and no attack success rate measured against this fixture says anything
+    about any model.
 
     Deterministic by construction: no randomness anywhere, so two identical runs produce
     identical transcripts.

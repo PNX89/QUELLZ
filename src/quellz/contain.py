@@ -154,6 +154,12 @@ class SpotlightWrapper:
     reported static attack success rate to 95 to 99 percent under adaptive attack, and over
     500 human red teamers reached 100 percent collective success against all twelve. An
     adaptive attacker is expected to defeat this wrapper.
+
+    Two mechanisms, not one. The tags tell the model where untrusted text starts and stops,
+    and datamarking replaces every whitespace run inside the span with the marker. Either one
+    alone changes what a consumer sees, so an evaluation that reports a drop from this wrapper
+    is reporting the pair, not the tags: see tests/test_contain.py, which measures each half
+    against the bundled fixture separately.
     """
 
     def __init__(self, inner: Agent, *, marker: str = "▁", note: str = DEFAULT_NOTE) -> None:
