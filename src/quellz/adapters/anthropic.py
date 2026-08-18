@@ -55,12 +55,17 @@ class AnthropicAgent:
     Opus 5 and Sonnet 5. This adapter omits it, so it runs adaptive there by default. The call
     surface is messages.create with model, max_tokens, tools and messages, and no beta headers.
 
+    max_tokens is the budget for thinking and reply text together, not for the reply alone, so
+    the default is sized for a model that is thinking on every step of a tool loop rather than
+    for the length of one answer. A budget tuned to the reply truncates mid-turn and the loop
+    ends with no tool call and no error.
+
     Conversation state lives on the instance, per protocol rule 2, so a multi turn attack is
     repeated run() calls on one object.
     """
 
     def __init__(
-        self, *, model: str, max_tokens: int = 1024, client: Any = None, max_steps: int = 4
+        self, *, model: str, max_tokens: int = 16000, client: Any = None, max_steps: int = 4
     ) -> None:
         if client is None:
             import anthropic  # deferred: the SDK is an optional extra

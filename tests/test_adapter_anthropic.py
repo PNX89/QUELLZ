@@ -108,3 +108,17 @@ def test_a_blocked_call_is_recorded_and_reported_back_without_aborting():
 def test_model_is_a_required_keyword_with_no_default():
     with pytest.raises(TypeError):
         AnthropicAgent(client=StubClient())
+
+
+def test_the_default_token_budget_leaves_room_for_thinking_as_well_as_the_reply():
+    """max_tokens caps thinking and reply text together on the current model line.
+
+    Adaptive thinking is what omitting the parameter gets you on Opus 5 and Sonnet 5, and this
+    adapter omits it. A budget sized for the length of an answer truncates a four step tool
+    loop mid-turn, which surfaces as a run that simply stops calling tools.
+    """
+    client = StubClient(_text("Done."))
+    agent = AnthropicAgent(model=MODEL, client=client)
+    agent.run("Read the document q3_plan.md.", build_tools(Sandbox()))
+    assert agent.max_tokens >= 8192
+    assert client.messages.calls[0]["max_tokens"] == agent.max_tokens
