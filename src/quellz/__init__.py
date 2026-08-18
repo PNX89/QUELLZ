@@ -10,7 +10,16 @@ from quellz.contain import (
     verify_file,
 )
 from quellz.mock import NaiveMockAgent
-from quellz.predicates import AllOf, AnyOf, Not, Predicate, SandboxState, TextContains, ToolCalled
+from quellz.predicates import (
+    AllOf,
+    AnyOf,
+    Exfiltrated,
+    Not,
+    Predicate,
+    SandboxState,
+    TextContains,
+    ToolCalled,
+)
 from quellz.report import (
     METHODOLOGY_CAVEAT,
     CaseResult,
@@ -57,6 +66,7 @@ __all__ = [
     "CatalogMismatch",
     "Delta",
     "DeltaRow",
+    "Exfiltrated",
     "HashChainLog",
     "Injection",
     "LeastPrivilege",
