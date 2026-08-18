@@ -1,0 +1,96 @@
+"""Prompt-injection red-team and containment harness for tool-using LLM agents."""
+
+from quellz.attacks import REFERENCES, Attack, Technique, Vector, validate_catalog
+from quellz.catalog import CATALOG_VERSION, by_technique, get_catalog
+from quellz.contain import (
+    BlockedCall,
+    HashChainLog,
+    LeastPrivilege,
+    SpotlightWrapper,
+    verify_file,
+)
+from quellz.mock import NaiveMockAgent
+from quellz.predicates import AllOf, AnyOf, Not, Predicate, SandboxState, TextContains, ToolCalled
+from quellz.report import (
+    METHODOLOGY_CAVEAT,
+    CaseResult,
+    Delta,
+    DeltaRow,
+    Meta,
+    Report,
+    TechniqueStats,
+    delta_as_dict,
+    render_delta,
+    render_report,
+    report_as_dict,
+)
+from quellz.runner import compare, run_suite
+from quellz.sandbox import Injection, Sandbox, Site, build_tools
+from quellz.types import (
+    Agent,
+    AgentResult,
+    CatalogError,
+    CatalogMismatch,
+    LogVerificationError,
+    QuellzError,
+    Sensitivity,
+    Tool,
+    ToolBlocked,
+    ToolCall,
+    Transcript,
+)
+
+__version__ = "0.1.0"
+
+__all__ = [
+    "CATALOG_VERSION",
+    "METHODOLOGY_CAVEAT",
+    "REFERENCES",
+    "Agent",
+    "AgentResult",
+    "AllOf",
+    "AnyOf",
+    "Attack",
+    "BlockedCall",
+    "CaseResult",
+    "CatalogError",
+    "CatalogMismatch",
+    "Delta",
+    "DeltaRow",
+    "HashChainLog",
+    "Injection",
+    "LeastPrivilege",
+    "LogVerificationError",
+    "Meta",
+    "NaiveMockAgent",
+    "Not",
+    "Predicate",
+    "QuellzError",
+    "Report",
+    "Sandbox",
+    "SandboxState",
+    "Sensitivity",
+    "Site",
+    "SpotlightWrapper",
+    "Technique",
+    "TechniqueStats",
+    "TextContains",
+    "Tool",
+    "ToolBlocked",
+    "ToolCall",
+    "ToolCalled",
+    "Transcript",
+    "Vector",
+    "__version__",
+    "build_tools",
+    "by_technique",
+    "compare",
+    "delta_as_dict",
+    "get_catalog",
+    "render_delta",
+    "render_report",
+    "report_as_dict",
+    "run_suite",
+    "validate_catalog",
+    "verify_file",
+]
