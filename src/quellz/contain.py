@@ -53,7 +53,7 @@ class LeastPrivilege:
     allowed_sensitivity is an explicit set rather than a maximum level, so adding a new
     sensitivity tag fails closed instead of silently widening the policy.
 
-    This is Meta's Agents Rule of Two (November 2025) as code: an agent should hold no more
+    This is Meta's Agents Rule of Two (31 October 2025) as code: an agent should hold no more
     than two of (A) processes untrustworthy input, (B) reaches sensitive systems or private
     data, (C) can change state or communicate externally. If it needs all three, put a human
     in the loop. The demo policy drops (B) and narrows (C) to a local write with no external

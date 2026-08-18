@@ -92,7 +92,8 @@ uv sync --dev
 uv run python examples/demo_ab.py
 ```
 
-`examples/adapt_your_agent.py` puts your own agent behind the `Agent` protocol in 60 lines.
+`examples/adapt_your_agent.py` puts your own agent behind the `Agent` protocol in 62 lines,
+and `tests/test_readme.py` counts them so that number cannot go stale.
 
 ## Using it as a gate
 
@@ -225,7 +226,7 @@ raises `ToolBlocked` and lands in `policy.blocked` with the tool name, arguments
 `allowed_sensitivity` is an explicit set rather than a maximum level, so a new sensitivity tag
 fails closed instead of silently widening the policy.
 
-This is Meta's Agents Rule of Two (November 2025) as code: an agent should hold no more than
+This is Meta's Agents Rule of Two (31 October 2025) as code: an agent should hold no more than
 two of (A) processes untrustworthy input, (B) reaches sensitive systems or private data,
 (C) can change state or communicate externally, and if it needs all three, a human belongs in
 the loop. Simon Willison's lethal trifecta (June 2025) is the same shape stated as a hazard:
@@ -299,7 +300,7 @@ one that was reported.
 
 | Tool | License | Shape | Use it when |
 | --- | --- | --- | --- |
-| promptfoo | MIT | roughly 18,000 stars, 50+ red-team plugins with OWASP mapping; acquired by OpenAI on 9 March 2026 for approximately $86M and kept MIT | you want application-level red teaming wired into CI |
+| promptfoo | MIT | roughly 18,000 stars, 50+ red-team plugins with OWASP mapping; acquired by OpenAI on 9 March 2026 for undisclosed terms and kept MIT | you want application-level red teaming wired into CI |
 | NVIDIA garak | Apache-2.0 | 120+ probe modules | you are probing the model itself rather than an application |
 | Microsoft PyRIT | MIT | orchestrated multi-turn campaigns | you need adversarial conversations, not single-shot payloads |
 | DeepTeam | Apache-2.0 | 40+ probes, the clearest OWASP mapping of the group | you want OWASP-shaped reporting out of the box |
@@ -426,7 +427,11 @@ the follow-up with a number and shows the cost in the same table.
 | `GITHUB-AUP` | GitHub Acceptable Use Policies. https://docs.github.com/en/site-policy/acceptable-use-policies/github-active-malware-or-exploits |
 
 Those keys are `quellz.REFERENCES`, which `validate_catalog` checks every attack against, and a
-test asserts this table and that registry cannot drift apart.
+test asserts this table and that registry cannot drift apart. MITRE ATLAS and the two OWASP
+GenAI resources are cited at a site root rather than at a per-technique page on purpose: ATLAS
+serves a single-page app whose deep links return 404 to anything but a browser, and the OWASP
+2026 editions have no per-entry permalinks yet. The technique and risk identifiers in the left
+column are the precise locators; the URL is where you go to search for them.
 
 ## Development
 

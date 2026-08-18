@@ -47,10 +47,13 @@ class AnthropicAgent:
     Model ids as of August 2026 are claude-opus-5 and claude-sonnet-5 (1M context) and
     claude-haiku-4-5 (200K). The id strings are complete as written; no date suffix.
 
-    Deliberately free of sampling parameters. temperature, top_p, top_k and thinking all
-    return HTTP 400 on Opus 4.7 and later, on Opus 5, Sonnet 5 and Fable 5, so hardcoding any
-    of them here would be a future breakage. The call surface is messages.create with model,
-    max_tokens, tools and messages, and no beta headers.
+    Deliberately free of sampling parameters. temperature, top_p and top_k all return HTTP 400
+    on Opus 4.7 and later, on Opus 5, Sonnet 5 and Fable 5, so hardcoding any of them here
+    would be a future breakage. `thinking` is a narrower story and worth stating precisely:
+    the legacy {"type": "enabled", "budget_tokens": N} form returns 400 on those models, while
+    {"type": "adaptive"} is valid and is what omitting the parameter already gets you on
+    Opus 5 and Sonnet 5. This adapter omits it, so it runs adaptive there by default. The call
+    surface is messages.create with model, max_tokens, tools and messages, and no beta headers.
 
     Conversation state lives on the instance, per protocol rule 2, so a multi turn attack is
     repeated run() calls on one object.

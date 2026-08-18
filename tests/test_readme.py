@@ -75,6 +75,18 @@ def test_the_hero_table_is_captured_output_from_the_bundled_demo(tmp_path: Path)
     assert hero in finished.stdout
 
 
+def test_the_quoted_line_count_of_the_adapter_example_is_the_real_one():
+    """A number about a file in this repository, checked against the file."""
+    quoted = re.search(
+        r"`examples/(\S+?)` puts your own agent behind the `Agent` protocol in "
+        r"(\d+) lines",
+        README,
+    )
+    assert quoted, "the README no longer states the line count this test exists to check"
+    path = ROOT / "examples" / quoted.group(1)
+    assert len(path.read_text(encoding="utf-8").splitlines()) == int(quoted.group(2))
+
+
 def test_the_methodology_caveat_appears_verbatim():
     flattened = " ".join(README.replace("> ", "").split())
     assert METHODOLOGY_CAVEAT in flattened

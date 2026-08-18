@@ -10,7 +10,8 @@ QUELLZ is for defensive testing of systems you own or are explicitly authorised 
   exist so the harness has something citable to run.
 - Every attacker destination is a reserved `.invalid` hostname per RFC 2606
   (`attacker@example.invalid`, `https://attacker.example.invalid/collect`), so no payload can
-  address a real host.
+  address a real host. `tests/test_catalog.py` asserts that against the data rather than
+  leaving it as a promise in this file.
 - Nothing here targets a third party. The only environment any payload reaches is the
   in-process `Sandbox`.
 
@@ -19,9 +20,13 @@ statement, so anyone reading the raw data without this document still sees it.
 
 ## Authorisation
 
-Prompt injection against a system you do not own is not automatically lawful research. US
-commentary from July 2026 argues that it likely constitutes improper means under the Defend
-Trade Secrets Act rather than lawful reverse engineering.
+Prompt injection against a system you do not own is not automatically lawful research.
+Depending on the jurisdiction and on what the target is, it can be treated as unauthorised
+access or as misappropriation rather than as reverse engineering, and that analysis turns on
+facts a file like this cannot know. Get written authorisation before pointing any of this at a
+system you do not control, and take advice from someone qualified to give it. No statute or
+case is named here on purpose: every other claim in this repository carries a source, and a
+legal one summarised from memory would be the weakest sentence in it.
 
 ## Dual use
 
