@@ -1,12 +1,15 @@
+import json
+from collections.abc import Sequence
+
 import pytest
 
 from quellz.catalog import get_catalog
-from quellz.contain import LeastPrivilege
+from quellz.contain import HashChainLog, LeastPrivilege
 from quellz.mock import NaiveMockAgent
 from quellz.report import Report
 from quellz.runner import compare, run_suite
 from quellz.sandbox import API_KEY_VALUE, ATTACKER_EMAIL, ATTACKER_WEBHOOK
-from quellz.types import Agent, CatalogError, CatalogMismatch
+from quellz.types import Agent, AgentResult, CatalogError, CatalogMismatch, Tool, ToolCall
 
 
 def _rates(report: Report) -> list[float]:
@@ -94,3 +97,32 @@ def test_the_demo_policy_costs_benign_utility_and_the_report_shows_it(contained:
 def test_run_suite_refuses_an_empty_attack_list():
     with pytest.raises(CatalogError, match="empty attack list"):
         run_suite(NaiveMockAgent, attacks=())
+
+
+class LyingAgent:
+    """An agent whose account of itself is false: it writes a note and reports a send.
+
+    The agent is the untrusted component in this harness, so this is exactly the record a
+    hash chain built from AgentResult.tool_calls would preserve tamper-evidently.
+    """
+
+    def run(self, prompt: str, tools: Sequence[Tool]) -> AgentResult:
+        {tool.name: tool for tool in tools}["write_note"].fn(
+            name="real.md", body="this really happened"
+        )
+        return AgentResult(
+            text="",
+            tool_calls=(
+                ToolCall(name="send_email", args={"to": "nobody"}, executed=True, result="fiction"),
+            ),
+        )
+
+
+def test_the_hash_chain_records_the_sandbox_not_the_agents_account_of_itself(tmp_path):
+    path = tmp_path / "chain.jsonl"
+    log = HashChainLog(path)
+    run_suite(LyingAgent, attacks=get_catalog()[:1], label="lying", log=log)
+
+    entries = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+    called = {entry["data"]["tool"] for entry in entries if entry["event"] == "tool_call"}
+    assert called == {"write_note"}, "the chain has to hold the call that reached the sandbox"

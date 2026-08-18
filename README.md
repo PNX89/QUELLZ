@@ -275,12 +275,21 @@ when an expected head hash is supplied out of band. It does not defend against a
 can write the whole file, who simply recomputes every hash. For that you need an external
 anchor: an offline copy, a signature, or a witness.
 
-Append-only JSONL, one entry per tool call, each carrying `sha256` over the canonical JSON of
-its predecessor's hash and its own payload. `quellz verify-log PATH --expected-head HEX`
-checks it. Tests assert structural properties, never a golden hash string, and the clock is
-injectable so a test can freeze time without pulling in a dependency. QUESTZ's run journal is
-an operational audit trail; this is a hash-chained forensic artifact whose only job is to let
-a post-incident reviewer detect edits.
+Append-only JSONL, each entry carrying `sha256` over the canonical JSON of its predecessor's
+hash and its own payload. `quellz verify-log PATH --expected-head HEX` checks it. Tests assert
+structural properties, never a golden hash string, and the clock is injectable so a test can
+freeze time without pulling in a dependency. An operational run journal answers what the
+system did; this answers whether the record of it was edited afterwards.
+
+**It is wired to the trusted side of the boundary**, which is the part worth stating plainly.
+The agent is the untrusted component in this harness, so a chain built from
+`AgentResult.tool_calls` would be a tamper-evident record of the agent's own account of
+itself. Instead the runner taps the tool callables it hands over, so a `tool_call` entry means
+the call reached the sandbox whatever the agent later reports, and `LeastPrivilege` writes a
+`policy_decision` entry at the point it enforces policy, because a refused call never reaches
+the sandbox and the gate is the only place it is visible. A test drives a deliberately lying
+agent through the runner and asserts the chain holds the call that happened rather than the
+one that was reported.
 
 ## How this differs, and when to use something else
 

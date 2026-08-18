@@ -139,7 +139,8 @@ def _run(args: argparse.Namespace) -> int:
     if args.mode in ("baseline", "both"):
         reports["baseline"] = run_suite(factory, label="baseline", **common)
     if args.mode in ("contained", "both"):
-        reports["contained"] = run_suite(_contained(factory), label="contained", **common)
+        contained = _contained(factory, log=log)
+        reports["contained"] = run_suite(contained, label="contained", **common)
     delta = compare(reports["baseline"], reports["contained"]) if len(reports) == 2 else None
 
     print(_sections(reports, delta, "text"))
@@ -221,14 +222,21 @@ def _demo_factory(max_steps: int) -> Callable[[], Agent]:
     return build
 
 
-def _contained(factory: Callable[[], Agent]) -> Callable[[], Agent]:
-    """The demo containment configuration, applied to whichever agent you brought."""
+def _contained(
+    factory: Callable[[], Agent], *, log: HashChainLog | None = None
+) -> Callable[[], Agent]:
+    """The demo containment configuration, applied to whichever agent you brought.
+
+    The log reaches the policy gate rather than only the runner: a refused call never touches
+    the sandbox, so the chokepoint is the only place a refusal can be recorded.
+    """
 
     def build() -> Agent:
         return LeastPrivilege(
             SpotlightWrapper(factory()),
             allowed_tools=DEMO_ALLOWED_TOOLS,
             allowed_sensitivity=DEMO_ALLOWED_SENSITIVITY,
+            log=log,
         )
 
     return build

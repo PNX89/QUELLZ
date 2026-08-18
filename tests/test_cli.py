@@ -67,7 +67,7 @@ def test_verify_log_passes_on_a_good_chain_and_fails_on_a_tampered_one(tmp_path,
 
     lines = path.read_text(encoding="utf-8").splitlines()
     entry = json.loads(lines[2])
-    entry["data"]["executed"] = not entry["data"]["executed"]
+    entry["data"]["tool"] = "post_webhook"
     lines[2] = json.dumps(entry, sort_keys=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     assert main(["verify-log", str(path)]) == EXIT_GATE

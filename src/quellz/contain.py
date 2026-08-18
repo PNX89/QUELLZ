@@ -62,6 +62,10 @@ class LeastPrivilege:
 
     It does not label a block benign or malicious. Only the runner knows which condition was
     running, so those counters live in Report.
+
+    Given a HashChainLog it records every policy decision it makes, allowed or refused, at the
+    point the policy is enforced. That is the only place a refusal is visible: a blocked call
+    never reaches the sandbox, so the runner's own tap on the tools cannot see it.
     """
 
     def __init__(
@@ -91,7 +95,8 @@ class LeastPrivilege:
             reason = self._refusal(tool)
             if self.log is not None:
                 self.log.append(
-                    "tool_call", {"tool": tool.name, "allowed": reason is None, "reason": reason}
+                    "policy_decision",
+                    {"tool": tool.name, "allowed": reason is None, "reason": reason},
                 )
             if reason is not None:
                 self.blocked.append(BlockedCall(tool=tool.name, args=dict(kwargs), reason=reason))

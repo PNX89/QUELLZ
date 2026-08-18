@@ -3,13 +3,22 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Sequence
+from dataclasses import replace
 
 from quellz.attacks import Attack, Technique
 from quellz.catalog import CATALOG_VERSION, get_catalog
 from quellz.contain import HashChainLog
 from quellz.report import CaseResult, Delta, DeltaRow, Meta, Report, TechniqueStats
 from quellz.sandbox import Sandbox, build_tools
-from quellz.types import Agent, AgentResult, CatalogError, CatalogMismatch, ToolCall, Transcript
+from quellz.types import (
+    Agent,
+    AgentResult,
+    CatalogError,
+    CatalogMismatch,
+    Tool,
+    ToolCall,
+    Transcript,
+)
 
 __all__ = [
     "CaseResult",
@@ -149,38 +158,55 @@ def _run_condition(
         # A payload on a tool surface is planted from inject_at_turn onwards, which is what
         # lets a two turn case keep the first turn clean.
         live = poison if turn >= attack.inject_at_turn else None
-        result = agent.run(
-            attack.prompt_for_turn(turn, attacked=attacked),
-            build_tools(sandbox, poison=live),
-        )
-        transcript.append(result)
+        tools = build_tools(sandbox, poison=live)
         if log is not None:
-            _log_calls(log, attack, result, label=label, attacked=attacked, turn=turn)
+            tools = _tap(tools, log, attack=attack, label=label, attacked=attacked, turn=turn)
+        result = agent.run(attack.prompt_for_turn(turn, attacked=attacked), tools)
+        transcript.append(result)
     return tuple(transcript), sandbox
 
 
-def _log_calls(
+def _tap(
+    tools: Sequence[Tool],
     log: HashChainLog,
-    attack: Attack,
-    result: AgentResult,
     *,
+    attack: Attack,
     label: str,
     attacked: bool,
     turn: int,
-) -> None:
-    for call in result.tool_calls:
-        log.append(
-            "tool_call",
-            {
-                "run": label,
-                "attack": attack.id,
-                "condition": "attacked" if attacked else "benign",
-                "turn": turn,
-                "tool": call.name,
-                "executed": call.executed,
-                "reason": call.blocked_reason,
-            },
-        )
+) -> tuple[Tool, ...]:
+    """Chain every call that reaches the sandbox, recorded at the sandbox.
+
+    The agent is the untrusted component in this harness, so a chain built from
+    AgentResult.tool_calls would be a tamper-evident record of the agent's own account of
+    itself. The tap sits on the callable the agent has to invoke to get a result, so an agent
+    that under-reports a call it made, or reports one it did not, changes nothing here.
+
+    Refusals never reach the tap by construction: a containment layer wraps these tools and
+    raises before delegating. That is the other half of the record, and it is why
+    LeastPrivilege takes a log of its own.
+    """
+
+    def tapped(tool: Tool) -> Tool:
+        def call(**kwargs: str) -> str:
+            # Written after the call returns, so the entry records a call that ran rather than
+            # one that was about to.
+            output = tool.fn(**kwargs)
+            log.append(
+                "tool_call",
+                {
+                    "run": label,
+                    "attack": attack.id,
+                    "condition": "attacked" if attacked else "benign",
+                    "turn": turn,
+                    "tool": tool.name,
+                },
+            )
+            return output
+
+        return replace(tool, fn=call)
+
+    return tuple(tapped(tool) for tool in tools)
 
 
 def _calls(transcript: Transcript) -> tuple[ToolCall, ...]:
