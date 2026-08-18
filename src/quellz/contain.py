@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import time
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
@@ -26,6 +27,7 @@ __all__ = [
     "HashChainLog",
     "LeastPrivilege",
     "SpotlightWrapper",
+    "escape_delimiter",
     "verify_file",
 ]
 
@@ -120,6 +122,20 @@ DEFAULT_NOTE = (
     "so you can always tell where untrusted text starts and stops."
 )
 
+# A tool result carrying the literal closing delimiter would end the span early and leave the
+# rest of the payload outside it, which is the first bypass anyone tries against tag-based
+# spotlighting. Every occurrence of the tag syntax inside the body loses its angle bracket, so
+# untrusted text can neither close the span nor open a second one. Case insensitive because a
+# lenient consumer may accept </UNTRUSTED-DATA>; the lookahead keeps the substitution to the
+# bracket so the reader still sees what the content attempted.
+_DELIMITER = re.compile(r"<(?=/?untrusted-data\b)", re.IGNORECASE)
+_ESCAPED_BRACKET = "&lt;"
+
+
+def escape_delimiter(text: str) -> str:
+    """Remove the ability of untrusted text to close or forge an <untrusted-data> span."""
+    return _DELIMITER.sub(_ESCAPED_BRACKET, text)
+
 
 class SpotlightWrapper:
     """Threat model: content the agent fetched is read as instructions, so mark it as data.
@@ -158,7 +174,7 @@ class SpotlightWrapper:
 
     def _mark(self, tool: Tool) -> Tool:
         def marked(**kwargs: str) -> str:
-            body = self.marker.join(tool.fn(**kwargs).split())
+            body = self.marker.join(escape_delimiter(tool.fn(**kwargs)).split())
             return f'<untrusted-data source="{tool.name}">\n{body}\n</untrusted-data>'
 
         return Tool(

@@ -51,7 +51,7 @@ def test_a_bad_agent_path_names_the_path_and_prints_no_traceback(capsys):
 def test_catalog_json_parses_and_lists_every_fixture(capsys):
     assert main(["catalog", "--json"]) == EXIT_OK
     entries = json.loads(capsys.readouterr().out)
-    assert len(entries) == 20
+    assert len(entries) == 21
     assert {entry["id"] for entry in entries} == {attack.id for attack in get_catalog()}
     assert all(entry["fixture"] for entry in entries)
 

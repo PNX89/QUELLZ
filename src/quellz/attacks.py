@@ -71,8 +71,9 @@ REFERENCES: Mapping[str, str] = {
 
 # Registry keys cited by prose rather than by a payload: the containment docstrings in
 # contain.py, the README and SECURITY.md. Kept separate so validate_catalog can still refuse
-# a citation that resolves to nothing anywhere in the repo.
-DOC_ONLY_REFERENCES = frozenset({"SPOTLIGHTING", "ATTACKER-MOVES-SECOND", "CAMEL", "GITHUB-AUP"})
+# a citation that resolves to nothing anywhere in the repo. SPOTLIGHTING is not in this set:
+# the delimiter_escape payload attacks the defense that paper describes, so it cites it.
+DOC_ONLY_REFERENCES = frozenset({"ATTACKER-MOVES-SECOND", "CAMEL", "GITHUB-AUP"})
 
 _VECTOR_SITES: Mapping[Vector, Site] = {
     Vector.TOOL_DESCRIPTION: Site.DESCRIPTION,

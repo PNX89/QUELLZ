@@ -33,9 +33,12 @@ __all__ = [
 ]
 
 # Printed beneath every table this module renders, carried in Report.meta.caveat, and
-# reproduced verbatim in the README. Changing it here changes it everywhere on purpose.
+# reproduced verbatim in the README. Changing it here changes it everywhere on purpose. It
+# names no payload count: --technique runs a subset, and a caveat that quoted the size of the
+# whole catalog under a filtered run would be the small dishonesty this text exists to avoid.
+# The provenance line above every table carries the count of the cases actually run.
 METHODOLOGY_CAVEAT = (
-    "These numbers measure the QUELLZ harness against a fixed catalog of 20 static payloads "
+    "These numbers measure the QUELLZ harness against its catalog of static payload fixtures "
     "executed against the bundled NaiveMockAgent. They demonstrate that the containment layer "
     "enforces its stated policy. They are not evidence about the robustness of any real model, "
     "and static attack success rate is a known-invalid proxy for robustness: an adaptive "

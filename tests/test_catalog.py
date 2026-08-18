@@ -15,9 +15,10 @@ def _catalog_where(attack_id: str, **changes: object) -> tuple:
     return tuple(replace(a, **changes) if a.id == attack_id else a for a in ATTACKS)
 
 
-def test_attack_ids_are_unique_and_the_catalog_holds_twenty_entries():
-    assert len(ATTACKS) == 20
-    assert len({attack.id for attack in ATTACKS}) == 20
+def test_attack_ids_are_unique_and_every_id_names_its_technique():
+    assert len(ATTACKS) == 21
+    assert len({attack.id for attack in ATTACKS}) == 21
+    assert all(attack.id.startswith(f"{attack.technique}.") for attack in ATTACKS)
     assert get_catalog() is ATTACKS
 
 
