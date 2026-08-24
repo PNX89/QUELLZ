@@ -590,4 +590,9 @@ Part of the Q...Z toolset, all of it designing for the failure that does not ann
 - [QUESTZ](https://github.com/PNX89/QUESTZ), stopping a scraper before it writes a CSV from a
   page that changed shape.
 
+**On QUOTEZ.** QUOTEZ is the narrow form of the same question. Rather than measuring how much
+damage an agent does and what containment costs to stop it, it removes the capability: there is
+no order placement code in it to be talked into running. Both are worth having, and the smaller
+question is the one you can actually finish.
+
 <!-- toolset:end -->
