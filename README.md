@@ -6,6 +6,9 @@ Prompt-injection red-team and containment harness for tool-using LLM agents.
 
 > **QUELL** the injection.
 
+The file carrying the argument is [`src/quellz/contain.py`](src/quellz/contain.py): the policy
+gate and the spotlight wrapper, and the measured cost of both.
+
 ![A real run of the demo: twenty one payloads scored bare and contained, per technique, with
 the utility the policy cost shown in the same table](docs/demo.svg)
 
