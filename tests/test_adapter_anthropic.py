@@ -122,3 +122,37 @@ def test_the_default_token_budget_leaves_room_for_thinking_as_well_as_the_reply(
     agent.run("Read the document q3_plan.md.", build_tools(Sandbox()))
     assert agent.max_tokens >= 8192
     assert client.messages.calls[0]["max_tokens"] == agent.max_tokens
+
+
+def test_the_report_names_the_model_and_not_just_the_adapter_class():
+    """A pasted table has to say what it tested. The first live run's did not.
+
+    `_describe` used to take the innermost agent's class name unconditionally, so a run
+    worth 1.27 USD against a named model printed `agent AnthropicAgent`, and the model id
+    survived only in the JSON beside it. Both halves are asserted here: the adapter
+    carries the id, and the runner is what puts it in the report.
+    """
+    from quellz.runner import _describe
+
+    agent = AnthropicAgent(model=MODEL, client=StubClient())
+    assert agent.name == f"AnthropicAgent({MODEL})"
+
+    bare_name, containment = _describe(agent)
+    assert bare_name == f"AnthropicAgent({MODEL})"
+    assert containment == "none"
+
+    wrapped = LeastPrivilege(
+        agent, allowed_tools=("read_document",), allowed_sensitivity=(Sensitivity.READ,)
+    )
+    wrapped_name, stack = _describe(wrapped)
+    assert wrapped_name == f"AnthropicAgent({MODEL})"
+    assert "LeastPrivilege" in stack
+
+
+def test_an_agent_without_a_name_still_reports_its_class():
+    """The fixture has no `name`, and the README block that says `agent NaiveMockAgent`
+    is asserted verbatim by test_readme.py, so the fallback is load bearing."""
+    from quellz.mock import NaiveMockAgent
+    from quellz.runner import _describe
+
+    assert _describe(NaiveMockAgent())[0] == "NaiveMockAgent"

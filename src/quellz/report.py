@@ -17,6 +17,7 @@ from quellz.attacks import Technique, Vector
 from quellz.types import ToolCall
 
 __all__ = [
+    "BROUGHT_AGENT_CAVEAT",
     "FORMATS",
     "METHODOLOGY_CAVEAT",
     "CaseResult",
@@ -26,17 +27,19 @@ __all__ = [
     "Meta",
     "Report",
     "TechniqueStats",
+    "caveat_for",
     "delta_as_dict",
     "render_delta",
     "render_report",
     "report_as_dict",
 ]
 
-# Printed beneath every table this module renders, carried in Report.meta.caveat, and
-# reproduced verbatim in the README. Changing it here changes it everywhere on purpose. It
-# names no payload count: --technique runs a subset, and a caveat that quoted the size of the
-# whole catalog under a filtered run would be the small dishonesty this text exists to avoid.
-# The provenance line above every table carries the count of the cases actually run.
+# One of these two is printed beneath every table this module renders, chosen by caveat_for
+# and carried in Report.meta.caveat. The fixture one is reproduced verbatim in the README.
+# Changing either here changes it everywhere on purpose. Neither names a payload count:
+# --technique runs a subset, and a caveat that quoted the size of the whole catalog under a
+# filtered run would be the small dishonesty this text exists to avoid. The provenance line
+# above every table carries the count of the cases actually run.
 METHODOLOGY_CAVEAT = (
     "These numbers measure the QUELLZ harness against its catalog of static payload fixtures "
     "executed against the bundled NaiveMockAgent. They demonstrate that the containment layer "
@@ -44,6 +47,31 @@ METHODOLOGY_CAVEAT = (
     "and static attack success rate is a known-invalid proxy for robustness: an adaptive "
     "attacker is expected to defeat the SpotlightWrapper."
 )
+
+BROUGHT_AGENT_CAVEAT = (
+    "These numbers measure the QUELLZ harness against its catalog of static payload fixtures "
+    "executed against the agent named above. A static attack success rate is a lower bound on "
+    "what an attacker achieves and a known-invalid proxy for robustness: an adaptive attacker "
+    "is expected to defeat the SpotlightWrapper. The case count is on the provenance line "
+    "above. It is a smoke test rather than a benchmark, and at that size a single case moves "
+    "the overall rate by several points, so read the per-technique rows and repeat the run "
+    "before calling any movement in the overall rate a result."
+)
+
+FIXTURE_AGENT_NAME = "NaiveMockAgent"
+
+
+def caveat_for(agent_name: str) -> str:
+    """Pick the caveat that is true of the agent that actually produced the numbers.
+
+    The fixture caveat names the fixture and says the numbers are not evidence about any
+    real model. Printed under a table produced by a real model, both halves of that are
+    false, and a reporting layer that prints a false claim about its own scope is the exact
+    failure this project exists to argue against. The first live run printed it, which is
+    how this was found.
+    """
+    return METHODOLOGY_CAVEAT if agent_name == FIXTURE_AGENT_NAME else BROUGHT_AGENT_CAVEAT
+
 
 FORMATS = ("text", "markdown", "json")
 Format = Literal["text", "markdown", "json"]
@@ -182,7 +210,15 @@ def render_report(report: Report, fmt: Format) -> str:
         f"agent {report.agent_name}, containment {report.containment}",
         _provenance(report.n_cases, report.meta),
     ]
-    return _document(f"QUELLZ report: {report.label}", subtitle, headers, rows, _REPORT_LEGEND, fmt)
+    return _document(
+        f"QUELLZ report: {report.label}",
+        subtitle,
+        headers,
+        rows,
+        _REPORT_LEGEND,
+        fmt,
+        report.meta.caveat,
+    )
 
 
 def render_delta(delta: Delta, fmt: Format) -> str:
@@ -210,7 +246,7 @@ def render_delta(delta: Delta, fmt: Format) -> str:
         _provenance(delta.n_cases, delta.meta),
     ]
     title = f"QUELLZ delta: {delta.baseline_label} to {delta.contained_label}"
-    return _document(title, subtitle, headers, rows, _DELTA_LEGEND, fmt)
+    return _document(title, subtitle, headers, rows, _DELTA_LEGEND, fmt, delta.meta.caveat)
 
 
 def report_as_dict(report: Report) -> dict[str, Any]:
@@ -327,13 +363,14 @@ def _document(
     rows: Sequence[Sequence[str]],
     legend: str,
     fmt: str,
+    caveat: str,
 ) -> str:
     if fmt == "markdown":
         body = [f"## {title}", "", *(f"{line}  " for line in subtitle), ""]
-        body += [_markdown_table(headers, rows), "", legend, "", _quote(METHODOLOGY_CAVEAT)]
+        body += [_markdown_table(headers, rows), "", legend, "", _quote(caveat)]
         return "\n".join(body)
     body = [title, *subtitle, "", _text_table(headers, rows), ""]
-    body += [_wrap(legend), "", _wrap(METHODOLOGY_CAVEAT)]
+    body += [_wrap(legend), "", _wrap(caveat)]
     return "\n".join(body)
 
 

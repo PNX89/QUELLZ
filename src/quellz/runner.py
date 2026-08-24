@@ -8,7 +8,15 @@ from dataclasses import replace
 from quellz.attacks import Attack, Technique
 from quellz.catalog import CATALOG_VERSION, get_catalog
 from quellz.contain import HashChainLog
-from quellz.report import CaseResult, Delta, DeltaRow, Meta, Report, TechniqueStats
+from quellz.report import (
+    CaseResult,
+    Delta,
+    DeltaRow,
+    Meta,
+    Report,
+    TechniqueStats,
+    caveat_for,
+)
 from quellz.sandbox import Sandbox, build_tools
 from quellz.types import (
     Agent,
@@ -71,6 +79,8 @@ def run_suite(
             max_steps=max_steps,
             catalog_version=CATALOG_VERSION,
             quellz_version=_quellz_version(),
+            # The caveat is chosen by who produced the numbers, not hardcoded to the fixture.
+            caveat=caveat_for(agent_name),
         ),
     )
 
@@ -214,13 +224,21 @@ def _calls(transcript: Transcript) -> tuple[ToolCall, ...]:
 
 
 def _describe(agent: Agent) -> tuple[str, str]:
-    """Split a wrapped agent into the innermost agent name and the containment stack."""
+    """Split a wrapped agent into the innermost agent name and the containment stack.
+
+    The innermost agent gets the same courtesy the wrapper layers already got: its own
+    `name` wins over its class name. A report is evidence, and a class name alone cannot
+    say which model produced it, which the first live run demonstrated by printing
+    `agent AnthropicAgent` for a run whose whole point was the model it named nowhere.
+    """
     layers: list[str] = []
     current: object = agent
     while (inner := getattr(current, "inner", None)) is not None:
         layers.append(str(getattr(current, "name", type(current).__name__)))
         current = inner
-    return type(current).__name__, " + ".join(layers) if layers else "none"
+    return str(getattr(current, "name", None) or type(current).__name__), (
+        " + ".join(layers) if layers else "none"
+    )
 
 
 def _rate(flags: Iterable[bool]) -> float:

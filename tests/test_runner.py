@@ -126,3 +126,43 @@ def test_the_hash_chain_records_the_sandbox_not_the_agents_account_of_itself(tmp
     entries = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
     called = {entry["data"]["tool"] for entry in entries if entry["event"] == "tool_call"}
     assert called == {"write_note"}, "the chain has to hold the call that reached the sandbox"
+
+
+def test_a_brought_agent_does_not_get_the_fixture_s_caveat():
+    """The caveat printed under a table has to be true of the agent that produced it.
+
+    `render_delta` used to append METHODOLOGY_CAVEAT unconditionally, so the first live run
+    against a real model printed "executed against the bundled NaiveMockAgent" and "not
+    evidence about the robustness of any real model" under numbers that were exactly that.
+    A reporting layer that misstates its own scope is the failure this project argues
+    against, so the scope now follows the agent name.
+    """
+    from quellz.report import BROUGHT_AGENT_CAVEAT, METHODOLOGY_CAVEAT, render_delta
+
+    class NamedAgent(NaiveMockAgent):
+        name = "SomeModel(v1)"
+
+    fixture = compare(
+        run_suite(NaiveMockAgent, attacks=get_catalog()[:2], label="bare"),
+        run_suite(NaiveMockAgent, attacks=get_catalog()[:2], label="contained"),
+    )
+    brought = compare(
+        run_suite(NamedAgent, attacks=get_catalog()[:2], label="bare"),
+        run_suite(NamedAgent, attacks=get_catalog()[:2], label="contained"),
+    )
+
+    assert fixture.agent_name == "NaiveMockAgent"
+    assert brought.agent_name == "SomeModel(v1)"
+    assert fixture.meta.caveat == METHODOLOGY_CAVEAT
+    assert brought.meta.caveat == BROUGHT_AGENT_CAVEAT
+
+    for fmt in ("text", "markdown"):
+        assert "NaiveMockAgent" in render_delta(fixture, fmt)
+        rendered = render_delta(brought, fmt)
+        assert "bundled NaiveMockAgent" not in rendered
+        assert "not evidence about the robustness of any real model" not in rendered
+        # The replacement carries the lesson the two live runs taught, so anyone bringing
+        # their own agent is told a one case swing is noise before they report one.
+        assert "repeat the run" in rendered
+
+    assert json.loads(render_delta(brought, "json"))["meta"]["caveat"] == BROUGHT_AGENT_CAVEAT
