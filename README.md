@@ -6,6 +6,13 @@ Prompt-injection red-team and containment harness for tool-using LLM agents.
 
 > **QUELL** the injection.
 
+![A real run of the demo: twenty one payloads scored bare and contained, per technique, with
+the utility the policy cost shown in the same table](docs/demo.svg)
+
+That frame is built from `docs/evidence/demo.txt`, the captured output of a real run, asserted
+against a live one by the test suite. The playback cadence is chosen; none of the text is. The
+whole run is at [pnx89.github.io/QUELLZ](https://pnx89.github.io/QUELLZ/).
+
 Agents that call tools turn prompt injection from a nuisance into a breach. Once one loop reads
 untrusted content, holds a credential and can send mail, a sentence buried in a document is an
 exfiltration path. The question worth asking is not "is it safe". It is: what is my residual
