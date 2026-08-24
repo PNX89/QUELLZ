@@ -21,6 +21,7 @@ from quellz.predicates import (
     ToolCalled,
 )
 from quellz.report import (
+    BROUGHT_AGENT_CAVEAT,
     METHODOLOGY_CAVEAT,
     CaseResult,
     Delta,
@@ -52,6 +53,7 @@ from quellz.types import (
 __version__ = "0.1.0"
 
 __all__ = [
+    "BROUGHT_AGENT_CAVEAT",
     "CATALOG_VERSION",
     "METHODOLOGY_CAVEAT",
     "REFERENCES",

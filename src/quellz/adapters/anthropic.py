@@ -79,6 +79,11 @@ class AnthropicAgent:
         self.max_steps = max_steps
         self.messages: list[dict[str, Any]] = []
 
+    @property
+    def name(self) -> str:
+        """Carries the model id into the report, so a pasted table names what it tested."""
+        return f"{type(self).__name__}({self.model})"
+
     def run(self, prompt: str, tools: Sequence[Tool]) -> AgentResult:
         available = {tool.name: tool for tool in tools}
         schemas = [tool_schema(tool) for tool in tools]
