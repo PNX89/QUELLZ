@@ -569,4 +569,18 @@ for the payload catalog is in [SECURITY.md](SECURITY.md).
 
 MIT. Copyright (c) 2026 Quelin Zammit.
 
-Part of the Q...Z toolset: QUACKZ, QUOTEZ, QUELLZ, QUIDZ, QUESTZ.
+<!-- toolset:start -->
+
+Part of the Q...Z toolset, all of it designing for the failure that does not announce itself:
+
+- [QUACKZ](https://github.com/PNX89/QUACKZ), deflating a backtest that only looks good because
+  it was picked out of two hundred.
+- [QUOTEZ](https://github.com/PNX89/QUOTEZ), market data an agent can read and cannot act on.
+- QUELLZ, this one: measuring what prompt-injection containment costs in utility as well as in
+  attack rate.
+- [QUIDZ](https://github.com/PNX89/QUIDZ), refusing the outbound payment that would have gone
+  out twice.
+- [QUESTZ](https://github.com/PNX89/QUESTZ), stopping a scraper before it writes a CSV from a
+  page that changed shape.
+
+<!-- toolset:end -->
