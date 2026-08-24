@@ -5,6 +5,7 @@ against live output. `uv run X` is translated to the interpreter running this su
 the environment uv would hand it, so these tests need neither uv nor the network.
 """
 
+import json
 import re
 import shlex
 import subprocess
@@ -13,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from quellz import __version__
 from quellz.attacks import REFERENCES
 from quellz.report import METHODOLOGY_CAVEAT
 
@@ -104,3 +106,77 @@ def test_every_registry_citation_is_reproduced_in_the_readme():
 )
 def test_the_readme_avoids_the_overclaiming_vocabulary(banned: str):
     assert banned not in README.lower()
+
+
+CHAIN_HEAD = re.compile(r"\b[0-9a-f]{64}\b")
+
+
+def _escaped(text: str) -> str:
+    """The card is HTML, so the captured output appears in it escaped, not raw."""
+    return (
+        text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+    )
+
+
+def test_the_committed_demo_output_still_matches_a_live_run() -> None:
+    """The Pages card publishes this output, so a stale copy is a lie on a public page.
+
+    The hash chain head is masked on both sides and only the head. It is a different value on
+    every run by construction, which is the property the chain exists to have, so comparing it
+    would fail every time and comparing nothing would catch nothing. Every other line, and
+    that is every number the demo reports, still has to match exactly.
+
+    The log path is pinned so the capture does not carry one machine's temp directory layout
+    onto a public page.
+    """
+    committed = (ROOT / "docs" / "evidence" / "demo.txt").read_text(encoding="utf-8")
+    live = subprocess.run(
+        [sys.executable, "examples/demo_ab.py", "--log", "/tmp/quellz-demo.log.jsonl"],
+        capture_output=True,
+        text=True,
+        timeout=600,
+        check=True,
+        cwd=ROOT,
+    ).stdout
+    assert CHAIN_HEAD.sub("<head>", committed) == CHAIN_HEAD.sub("<head>", live), (
+        "docs/evidence/demo.txt no longer matches a live run. "
+        "Run: uv run --extra anthropic python scripts/capture_evidence.py, then regenerate."
+    )
+    # The masking must not be doing all the work: a real chain head has to be in there.
+    assert CHAIN_HEAD.search(committed), "the committed capture carries no hash chain head"
+
+
+def test_the_published_card_carries_the_output_it_claims_to() -> None:
+    card = (ROOT / "site" / "index.html").read_text(encoding="utf-8")
+    demo = (ROOT / "docs" / "evidence" / "demo.txt").read_text(encoding="utf-8")
+    assert _escaped(demo.rstrip()) in card, "the card's terminal block is not the captured output"
+    assert "a test fails when it" in card
+    # No machine specific path may reach a public page.
+    assert "/Users/" not in card and "/var/folders/" not in card
+
+
+def test_the_card_states_numbers_that_are_true_today() -> None:
+    """Skipped without the optional extra, because the total is a different number then.
+
+    `tests/test_adapter_anthropic.py` skips at import when anthropic is absent, so a
+    collection run without the extra counts fewer tests than the suite has. CI installs all
+    extras on 3.11 to 3.13 and this assertion runs there; the 3.14 leg deliberately installs
+    the zero dependency core only and skips it.
+    """
+    pytest.importorskip("anthropic")
+    facts = json.loads((ROOT / "docs" / "evidence" / "facts.json").read_text(encoding="utf-8"))
+    result = subprocess.run(
+        [sys.executable, "-m", "pytest", "-o", "addopts=", "--collect-only", "-q"],
+        capture_output=True,
+        text=True,
+        timeout=600,
+        check=True,
+        cwd=ROOT,
+    )
+    match = re.search(r"^(\d+) tests? collected", result.stdout, re.MULTILINE)
+    assert match is not None, f"no collection total in:\n{result.stdout[-400:]}"
+    assert facts["tests"] == int(match.group(1)), "facts.json's test total is stale"
+    assert facts["release"] == f"v{__version__}"
+    card = (ROOT / "site" / "index.html").read_text(encoding="utf-8")
+    assert f"<dd>{facts['tests']}</dd>" in card
+    assert f"<dd>{facts['release']}</dd>" in card
