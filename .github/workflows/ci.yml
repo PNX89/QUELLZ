@@ -13,32 +13,26 @@ permissions:
   contents: read
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # 3.11 to 3.13 install the optional extra so the adapter test executes.
-          - python-version: "3.11"
-            sync: "--all-extras --dev"
-          - python-version: "3.12"
-            sync: "--all-extras --dev"
-          - python-version: "3.13"
-            sync: "--all-extras --dev"
-          # 3.14 installs the zero dependency core only. That proves the core needs no wheels
-          # on the newest interpreter, and the adapter test skips through pytest.importorskip.
-          - python-version: "3.14"
-            sync: "--dev"
-    env:
-      UV_PYTHON: ${{ matrix.python-version }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.0.1
-        with:
-          enable-cache: true
-      - run: uv python install ${{ matrix.python-version }}
-      - run: uv sync ${{ matrix.sync }}
-      - run: uv run ruff check .
-      - run: uv run ruff format --check .
-      - run: uv run pytest -q
+  # Two calls to the shared workflow rather than one, because the difference between them is an
+  # argument this repository is making rather than a configuration detail.
+  #
+  # The shared legs themselves, lint, format and the suite, live in PNX89/.github and are pinned
+  # to a tag rather than a moving branch. The decision behind the pipeline, and the five things it
+  # deliberately does not gate, is at
+  # https://github.com/PNX89/.github/blob/main/docs/adr/0001-what-ci-is-for.md
+  extras:
+    name: with the adapter extra
+    uses: PNX89/.github/.github/workflows/checks.yml@v1
+    with:
+      python-versions: '["3.11", "3.12", "3.13"]'
+      sync-args: "--all-extras --dev"
+
+  # 3.14 installs the zero dependency core ONLY, and that is the point of this leg rather than an
+  # omission: it proves the core needs no wheels at all on the newest interpreter. The adapter
+  # tests skip through pytest.importorskip, which is why the total here is lower and correct.
+  core-only:
+    name: zero dependency core alone
+    uses: PNX89/.github/.github/workflows/checks.yml@v1
+    with:
+      python-versions: '["3.14"]'
+      sync-args: "--dev"
