@@ -592,6 +592,8 @@ Part of the Q...Z toolset, all of it designing for the failure that does not ann
   out twice.
 - [QUESTZ](https://github.com/PNX89/QUESTZ), stopping a scraper before it writes a CSV from a
   page that changed shape.
+- [QUIZZ](https://github.com/PNX89/QUIZZ), answering what a statistic said at the time, and
+  refusing when it cannot.
 
 **On QUOTEZ.** QUOTEZ is the narrow form of the same question. Rather than measuring how much
 damage an agent does and what containment costs to stop it, it removes the capability: there is
