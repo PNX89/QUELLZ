@@ -19,13 +19,11 @@ README = REPO / "README.md"
 
 # Paths the README names that are deliberately NOT in this repository, declared rather than
 # inferred, so a real rename can never hide behind an exception.
-FILE_EXCEPTIONS = {
-    # None declared for this repository.
-}
+FILE_EXCEPTIONS: set[str] = set()  # None declared for this repository.
 
 # The named implementation of each other contract kind. These live in the shared manifest and are
 # copied in here, so this repository fails on its own if one is deleted or renamed.
-IMPLEMENTATIONS = {
+IMPLEMENTATIONS: dict[str, str] = {
     "NUMBER": "test_the_quoted_line_count_of_the_adapter_example_is_the_real_one",
     "COMMAND": "test_every_quickstart_command_runs_and_exits_zero",
     "OUTPUT": "test_the_hero_table_is_captured_output_from_the_bundled_demo",
@@ -99,7 +97,7 @@ def test_this_repository_still_implements_every_contract_kind() -> None:
     # Written as a loop rather than a comprehension on purpose. The one line version lands at
     # exactly the hundred character limit these repositories use, so a formatter would keep
     # rewrapping it and this generated file would never be format stable.
-    missing = {}
+    missing: dict[str, str] = {}
     for kind, name in IMPLEMENTATIONS.items():
         if f"def {name}(" not in suite:
             missing[kind] = name
