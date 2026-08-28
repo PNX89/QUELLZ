@@ -600,6 +600,8 @@ Part of the Q...Z toolset, all of it designing for the failure that does not ann
   while it is still somebody's subprocess.
 - [QUILTZ](https://github.com/PNX89/QUILTZ), proving infrastructure code wrong without a cloud
   account, and saying what that cannot show.
+- [QUAYZ](https://github.com/PNX89/QUAYZ), telling a crash loop from an OOMKill, and naming the
+  failure that no single field finds.
 
 **On QUOTEZ.** QUOTEZ is the narrow form of the same question. Rather than measuring how much
 damage an agent does and what containment costs to stop it, it removes the capability: there is
