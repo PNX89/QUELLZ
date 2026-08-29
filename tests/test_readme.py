@@ -209,8 +209,11 @@ def test_the_readme_frame_is_built_from_the_captured_output() -> None:
         assert position < len(haystack), f"the frame draws a line the run never printed: {line!r}"
         position += 1
 
-    # ASCII only: test_every_text_file_in_the_repository_is_pure_ascii covers the tree, and this
-    # says why it matters here. The frame is generated, so a non ASCII glyph would arrive
-    # silently from a code change rather than from anyone typing one.
+    # ASCII only, and STRICTLY so, which the tree-wide scan in test_bytes.py is not: that one
+    # exempts the datamarking marker. Nothing exempts it here. The frame is generated, so a non
+    # ASCII glyph would arrive silently from a code change rather than from anyone typing one,
+    # and the one non ASCII character this repository owns is the last one that should reach an
+    # image rendered by a proxy. The comment that used to sit here named a test in a sibling
+    # repository and claimed it covered this tree; it did not exist here under any name.
     assert svg.isascii()
     assert "<script" not in svg, "a README image is served through a proxy that strips script"
