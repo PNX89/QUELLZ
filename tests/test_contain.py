@@ -115,6 +115,12 @@ def test_spotlight_tags_and_datamarks_a_tool_result():
     assert " " not in body
     assert wrapper.marker in body
 
+    # The empty string is falsy and would join every whitespace run with nothing, silently
+    # undoing datamarking. Nothing else in this file passes an empty marker, so the guard that
+    # refuses one had no test at all.
+    with pytest.raises(ValueError, match="non-empty marker"):
+        SpotlightWrapper(recorder, marker="")
+
 
 def _half(transform: Callable[[str], str], tool: Tool) -> Tool:
     """One half of SpotlightWrapper: the given transform over a tool's return value."""
@@ -228,15 +234,31 @@ def test_the_spotlight_note_is_prepended_exactly_once_per_run():
 
 
 def test_append_then_verify_passes_and_head_advances(tmp_path):
-    log = HashChainLog(tmp_path / "chain.jsonl", clock=lambda: FIXED_CLOCK)
+    path = tmp_path / "chain.jsonl"
+    log = HashChainLog(path, clock=lambda: FIXED_CLOCK)
     assert log.head() is None
     first = log.append("tool_call", {"tool": "read_document"})
     second = log.append("tool_call", {"tool": "send_email"})
     assert first != second
     assert log.head() == second
     log.verify()
-    verify_file(tmp_path / "chain.jsonl", expected_head=second)
-    assert HashChainLog(tmp_path / "chain.jsonl", clock=lambda: FIXED_CLOCK).head() == second
+    verify_file(path, expected_head=second)
+    assert HashChainLog(path, clock=lambda: FIXED_CLOCK).head() == second
+
+    # The HashChainLog docstring calls the hash 'canonical JSON', and sort_keys=True in
+    # _canonical is the only thing that makes that true. Writing and hashing share one
+    # function and a dict this class built preserves insertion order, so a log it wrote
+    # round-trips whether or not the keys are sorted: nothing above would notice sort_keys ever
+    # being dropped from _canonical. This is the one check where nothing is tampered: the same
+    # entry, its keys spelled in a different order on disk, still has to verify, or a tool that
+    # reformats the JSONL, jq included, would turn a genuine record into a false positive.
+    lines = path.read_text(encoding="utf-8").splitlines()
+    entry = json.loads(lines[1])
+    reordered = json.dumps(dict(reversed(list(entry.items()))))
+    assert reordered != lines[1], "the reorder produced the same bytes, it proves nothing"
+    lines[1] = reordered
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    verify_file(path, expected_head=second)
 
 
 def test_a_mutated_middle_entry_fails_verification_at_its_own_seq(tmp_path):
