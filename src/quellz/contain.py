@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from quellz.attacks import decode_tag_block
 from quellz.types import (
     Agent,
     AgentResult,
@@ -139,7 +140,18 @@ _ESCAPED_BRACKET = "&lt;"
 
 def escape_delimiter(text: str) -> str:
     """Remove the ability of untrusted text to close or forge an <untrusted-data> span."""
-    return _DELIMITER.sub(_ESCAPED_BRACKET, text)
+    # Matched against the text the consumer will READ, not the bytes as fetched. This package
+    # generates Unicode TAG characters itself, the bundled consumer decodes them before it
+    # scans, and datamarking does not break a TAG run either because those characters are not
+    # whitespace, so a delimiter spelled that way used to pass through untouched and close the
+    # span on the far side. decode_tag_block maps one character to one character, so a match
+    # position in the decoded view is the same position here and the escape lands on whichever
+    # spelling of the bracket the content actually used.
+    decoded = decode_tag_block(text)
+    characters = list(text)
+    for match in _DELIMITER.finditer(decoded):
+        characters[match.start()] = _ESCAPED_BRACKET
+    return "".join(characters)
 
 
 class SpotlightWrapper:

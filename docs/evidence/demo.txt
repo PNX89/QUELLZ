@@ -24,5 +24,5 @@ stated policy. They are not evidence about the robustness of any real model, and
 success rate is a known-invalid proxy for robustness: an adaptive attacker is expected to defeat
 the SpotlightWrapper.
 
-/tmp/quellz-demo.log.jsonl: hash chained tool calls, head ad71e61ef0b5a21a420be891b776962d6e5d5a4e1064ba1c25cd0bb907e3df06
-verify with: quellz verify-log /tmp/quellz-demo.log.jsonl --expected-head ad71e61ef0b5a21a420be891b776962d6e5d5a4e1064ba1c25cd0bb907e3df06
+/tmp/quellz-demo.log.jsonl: hash chained tool calls, head feb424a24b933870318731a9dc6c8cd1856276cb44d32b3e1f6d0a2971e1405f
+verify with: quellz verify-log /tmp/quellz-demo.log.jsonl --expected-head feb424a24b933870318731a9dc6c8cd1856276cb44d32b3e1f6d0a2971e1405f

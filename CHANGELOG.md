@@ -5,6 +5,28 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- `escape_delimiter` matches the delimiter against the text a consumer decodes rather than
+  against the bytes as fetched. A closing `<untrusted-data>` tag spelled in the Unicode TAG
+  characters this package generates passed the escape untouched, survived datamarking because
+  those characters are not whitespace, and closed the span on the far side.
+- `Exfiltrated` reads its content half from what a record carries rather than from the whole
+  flattened record, so neither the address the destination half already matched on nor the
+  record's own key names can stand in for the content the attack set out to steal.
+
+### Added
+
+- mypy, strict over the package, as a dev dependency and on both CI legs. `CONTRIBUTING.md`
+  called typing a gate while nothing here type checked, and the wheel ships `py.typed`.
+- Direct tests for the claims that had none, each proved to fail against the defect it
+  describes: `Exfiltrated`, the sequence, `prev` and field-set checks in the chain verifier,
+  the byte scan run against its own encoder, the sensitivity tag on every tool, protocol rule 2
+  across turns, and the shipped adapter, which now sits in the conformance parameter set behind
+  a stub client rather than outside it.
+
 ## [0.1.0] - 2026-08-18
 
 ### Added
@@ -40,4 +62,5 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `examples/demo_ab.py` and `examples/adapt_your_agent.py`, both deterministic and offline.
 - CI on Python 3.11, 3.12, 3.13 and 3.14, all required legs.
 
+[Unreleased]: https://github.com/PNX89/QUELLZ/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/PNX89/QUELLZ/releases/tag/v0.1.0
