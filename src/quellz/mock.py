@@ -79,8 +79,8 @@ class NaiveMockAgent:
     def run(self, prompt: str, tools: Sequence[Tool]) -> AgentResult:
         available = {tool.name: tool for tool in tools}
         self._remember(prompt)
-        for tool in tools:
-            self._remember(f"{tool.name}: {tool.description}")
+        for offered in tools:
+            self._remember(f"{offered.name}: {offered.description}")
 
         calls: list[ToolCall] = []
         lines: list[str] = []

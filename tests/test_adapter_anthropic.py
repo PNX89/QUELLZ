@@ -88,6 +88,42 @@ def test_the_request_carries_only_model_max_tokens_tools_and_messages():
     assert "billing migration" in fed_back["content"]
 
 
+def test_tool_use_blocks_without_the_matching_stop_reason_end_the_turn():
+    """Both halves of the guard, because either half alone accepts what the API does not send.
+
+    A batch of tool_use blocks is a request to act only when stop_reason says so. Reading the
+    presence of the blocks as sufficient answers a finished turn with another round trip, and
+    the history then carries a tool_result for a turn the model had already ended.
+    """
+    finished = _tool_use("read_document", name="q3_plan.md")
+    finished.stop_reason = "end_turn"
+    client = StubClient(finished, _text("Should never be reached."))
+    agent = AnthropicAgent(model=MODEL, client=client)
+
+    result = agent.run("Read the document q3_plan.md.", build_tools(Sandbox()))
+    assert result.tool_calls == ()
+    assert len(client.messages.calls) == 1
+
+
+def test_a_tool_that_was_never_offered_is_refused_with_a_reason_naming_it():
+    """Rule 4's other path: a refusal that does not say what was refused is not a refusal.
+
+    A model can name a tool that is not in the list it was handed. With an empty reason the
+    recorded call carries no blocked_reason at all, so it reads like a call that simply did
+    nothing, and the error fed back gives the model nothing to correct on the next step.
+    """
+    client = StubClient(_tool_use("delete_everything", target="prod"), _text("Understood."))
+    agent = AnthropicAgent(model=MODEL, client=client)
+
+    result = agent.run("Do something rash.", build_tools(Sandbox()))
+    call = result.tool_calls[0]
+    assert (call.name, call.executed) == ("delete_everything", False)
+    assert call.blocked_reason is not None and "delete_everything" in call.blocked_reason
+    fed_back = client.messages.calls[1]["messages"][-1]["content"][0]
+    assert fed_back["is_error"] is True
+    assert "delete_everything" in fed_back["content"]
+
+
 def test_a_blocked_call_is_recorded_and_reported_back_without_aborting():
     """Protocol rule 4 holds for the live adapter, not only for the bundled fixture."""
     sandbox = Sandbox()

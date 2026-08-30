@@ -378,9 +378,14 @@ in any case: a document containing `</untrusted-data>` is marked as `&lt;/untrus
 and the span still opens once and closes once. Without that, a payload ends its own span
 early and the rest of it renders outside the marked region, which is the first bypass anyone
 tries against a tag-based layer and the one the `indirect_document.delimiter_escape` payload
-exercises. Note what the fixture can and cannot show here: datamarking already destroys that
-payload's directive grammar, so the bundled agent does not obey it either way, and the
-regression test asserts the structure of the span rather than a number.
+exercises. The escape is matched against the text a consumer decodes rather than against the
+bytes as fetched, so it holds for a delimiter spelled in the Unicode TAG characters this
+package generates for its own concealment payload. That spelling used to walk straight
+through: it passed the escape untouched, survived datamarking because those characters are
+not whitespace, and closed the span on the far side. Note what the fixture can and cannot
+show here: datamarking already destroys that payload's directive grammar, so the bundled
+agent does not obey it either way, and the regression test asserts the structure of the span
+rather than a number.
 
 Hines et al., arXiv:2403.14720 (March 2024) reported datamarking cutting attack success rate from
 roughly 50 percent to below 3 percent on GPT-3.5-Turbo and from 40 percent to 0.00 percent on

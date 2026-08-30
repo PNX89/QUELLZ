@@ -16,6 +16,10 @@ jobs:
   # Two calls to the shared workflow rather than one, because the difference between them is an
   # argument this repository is making rather than a configuration detail.
   #
+  # run-mypy is set on BOTH legs and defaults to false in the shared workflow, which is how
+  # CONTRIBUTING came to call typing a gate while nothing here type checked. The wheel ships
+  # py.typed, so the checker is what keeps that promise rather than decorating it.
+  #
   # The shared legs themselves, lint, format and the suite, live in PNX89/.github and are pinned
   # to a tag rather than a moving branch. The decision behind the pipeline, and the five things it
   # deliberately does not gate, is at
@@ -26,6 +30,7 @@ jobs:
     with:
       python-versions: '["3.11", "3.12", "3.13"]'
       sync-args: "--all-extras --dev"
+      run-mypy: true
 
   # 3.14 installs the zero dependency core ONLY, and that is the point of this leg rather than an
   # omission: it proves the core needs no wheels at all on the newest interpreter. The adapter
@@ -36,3 +41,4 @@ jobs:
     with:
       python-versions: '["3.14"]'
       sync-args: "--dev"
+      run-mypy: true
