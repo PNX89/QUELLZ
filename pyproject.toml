@@ -39,7 +39,7 @@ requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [dependency-groups]
-dev = ["pytest>=8.0", "ruff>=0.6"]
+dev = ["mypy>=1.11", "pytest>=8.0", "ruff>=0.6"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/quellz"]
@@ -52,6 +52,25 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+
+# The wheel ships py.typed and the metadata above claims Typing :: Typed, which is a promise to
+# every consumer that these annotations hold, and nothing but a checker keeps a promise like that.
+# Strict, and over the package rather than the whole tree, because the package is what the promise
+# covers: the suite deliberately calls the adapter wrongly to assert what it refuses.
+# `files` is set here rather than passed on the command line so that CI, CONTRIBUTING and a bare
+# `uv run mypy` all check the same thing.
+[tool.mypy]
+files = ["src"]
+strict = true
+python_version = "3.11"
+
+# The SDK is an optional extra and the 3.14 CI leg installs the zero dependency core alone, so
+# on that leg the deferred `import anthropic` resolves to nothing. Its absence is the point of
+# the leg rather than a defect, and this silences only the missing-import error: where the SDK
+# IS installed, the adapter is checked against its real annotations.
+[[tool.mypy.overrides]]
+module = ["anthropic"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -12,6 +12,7 @@ import json
 import sys
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
+from typing import cast
 
 from quellz import __version__
 from quellz.attacks import Attack, Technique
@@ -267,7 +268,10 @@ def _load_factory(path: str) -> Callable[[], Agent]:
             f"--agent {path!r}: {attribute!r} returned {type(probe).__name__}, "
             "which has no run() method"
         )
-    return factory
+    # An attribute of a module the user named is Any by construction. The three checks above
+    # are what earns the narrowing: it is callable, it returned an object, and that object
+    # has run(). The cast asserts only what they established.
+    return cast("Callable[[], Agent]", factory)
 
 
 def _select(names: Sequence[str] | None) -> tuple[Attack, ...]:

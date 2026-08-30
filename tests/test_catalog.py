@@ -13,6 +13,18 @@ TOOLS = build_tools(Sandbox())
 TOOL_NAMES = tuple(tool.name for tool in TOOLS)
 EXFIL_TOOLS = {tool.name for tool in TOOLS if tool.sensitivity is Sensitivity.EXFIL}
 
+#: The tag on every tool, written out rather than derived. EXFIL_TOOLS above takes its scope
+#: from the code it guards, so a tag changed in the sandbox quietly shrinks the set that guard
+#: checks instead of failing anything. This is what the derivation is now checked against.
+SENSITIVITY_BY_TOOL = {
+    "read_document": "read",
+    "search_web": "read",
+    "read_config": "read",
+    "write_note": "write",
+    "send_email": "exfil",
+    "post_webhook": "exfil",
+}
+
 
 def _catalog_where(attack_id: str, **changes: object) -> tuple:
     return tuple(replace(a, **changes) if a.id == attack_id else a for a in ATTACKS)
@@ -33,6 +45,19 @@ def test_attack_ids_are_unique_and_every_id_names_its_technique():
     assert len({attack.id for attack in ATTACKS}) == 21
     assert all(attack.id.startswith(f"{attack.technique}.") for attack in ATTACKS)
     assert get_catalog() is ATTACKS
+
+
+def test_every_tool_carries_the_sensitivity_tag_the_threat_model_argues_from():
+    """The blast-radius argument in the README is made from these tags, in three places.
+
+    Retagging post_webhook from EXFIL to WRITE left the whole suite green: the guard below
+    derives its scope from build_tools, so it simply stopped checking the tool that left the
+    set, and the demo table did not move because LeastPrivilege was already refusing that tool
+    by name. The AND in the policy is what hid it, which is the reason to pin the tags here.
+    """
+    assert {tool.name: tool.sensitivity.value for tool in TOOLS} == SENSITIVITY_BY_TOOL
+    tagged_exfil = {name for name, tag in SENSITIVITY_BY_TOOL.items() if tag == "exfil"}
+    assert tagged_exfil == EXFIL_TOOLS
 
 
 def test_no_attack_scores_a_bare_call_at_an_exfil_sink_as_success():
