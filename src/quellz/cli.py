@@ -65,7 +65,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             return _run(args)
         if args.command == "catalog":
             return _catalog(args)
-        return _verify_log(args)
+        if args.command == "verify-log":
+            return _verify_log(args)
+        raise _UsageError(f"unknown command {args.command!r}")
     except (_UsageError, CatalogError, OSError) as error:
         print(f"quellz: {error}", file=sys.stderr)
         return EXIT_USAGE

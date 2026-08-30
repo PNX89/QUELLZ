@@ -16,6 +16,11 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `Exfiltrated` reads its content half from what a record carries rather than from the whole
   flattened record, so neither the address the destination half already matched on nor the
   record's own key names can stand in for the content the attack set out to steal.
+- `main`'s command dispatch ended in a bare `return _verify_log(args)` standing in for every
+  subcommand its two `if`s did not name. `_verify_log` reads `args.path` immediately, which a
+  fourth subcommand would not define, so adding one without also adding its own dispatch branch
+  crashed with an uncaught `AttributeError` instead of the exit-code contract this module
+  documents. The three names are now all explicit, and the fallback raises `_UsageError`.
 
 ### Added
 
@@ -26,6 +31,12 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   the byte scan run against its own encoder, the sensitivity tag on every tool, protocol rule 2
   across turns, and the shipped adapter, which now sits in the conformance parameter set behind
   a stub client rather than outside it.
+- Tests for the remaining claims that had none: `HashChainLog`'s hash survives an entry's keys
+  being reordered on disk without a value changing, `SpotlightWrapper` refuses an empty marker,
+  `DOC_ONLY_REFERENCES` still resolves against `REFERENCES`, `encode_tag_block`'s
+  printable-range filter is exercised against a newline and a tab rather than only against text
+  already inside its range, the `--max-asr` gate at its exact boundary rather than only far
+  above or below it, and the Pages card's `python` and `captured` fields against `facts.json`.
 
 ## [0.1.0] - 2026-08-18
 

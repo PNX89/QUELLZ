@@ -100,6 +100,13 @@ def test_every_registry_entry_is_https_and_is_cited_somewhere():
         assert key in cited or key in DOC_ONLY_REFERENCES, f"{key} is cited by nothing"
     assert not cited & DOC_ONLY_REFERENCES
 
+    # Every assertion above reads the registry outward: it walks REFERENCES and asks where
+    # each key is cited from. None of them walk DOC_ONLY_REFERENCES itself, so deleting one of
+    # its three keys from REFERENCES breaks nothing here. No attack cites a doc-only key, so
+    # validate_catalog never sees it either. The key keeps naming prose in the README and
+    # contain.py's docstrings that a reader can no longer resolve back to a URL.
+    assert set(REFERENCES) >= DOC_ONLY_REFERENCES
+
 
 def test_payload_objective_and_utility_task_are_non_empty():
     for attack in ATTACKS:

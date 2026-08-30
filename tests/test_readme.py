@@ -181,6 +181,13 @@ def test_the_card_states_numbers_that_are_true_today() -> None:
     card = (ROOT / "site" / "index.html").read_text(encoding="utf-8")
     assert f"<dd>{facts['tests']}</dd>" in card
     assert f"<dd>{facts['release']}</dd>" in card
+    # facts.json carries two more fields the card displays, python and captured, and neither
+    # was compared against anything: scripts/capture_evidence.py computes python from the CI
+    # matrix specifically so the card cannot lie about it, and that protection stopped at the
+    # file. A card advertising a Python range or a capture date nobody generated is still green
+    # without these two lines.
+    assert f"<dd>{facts['python']}</dd>" in card
+    assert f"Output captured on {facts['captured']}" in card
 
 
 def test_the_readme_frame_is_built_from_the_captured_output() -> None:
